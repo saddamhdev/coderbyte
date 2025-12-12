@@ -21,7 +21,8 @@ class Main {
         String varOcg = "exampleFlag";
 
         try {
-            URI uri = URI.create("http://coderbyte.com/api/challenges/json/all-posts");
+            // Correct endpoint and JSON format (ARRAY)
+            URI uri = URI.create("https://coderbyte.com/api/challenges/json/all-posts");
             URL url = uri.toURL();
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
@@ -35,25 +36,21 @@ class Main {
 
             String jsonString = sb.toString().trim();
 
-            // Fallback if API returns null or blank
             if (jsonString.equals("") || jsonString.equals("null")) {
-                jsonString = "{\"posts\":[]}";
+                return varFiltersCg;
             }
 
+            // The API returns a JSON ARRAY directly, not {posts:[...]}
             JsonElement root = JsonParser.parseString(jsonString);
 
-            // Ensure root is an object
-            if (!root.isJsonObject()) {
-                root = JsonParser.parseString("{\"posts\":[]}");
+            if (!root.isJsonArray()) {
+                return varFiltersCg;
             }
 
-            JsonObject json = root.getAsJsonObject();
-            JsonArray postsJson = json.getAsJsonArray("posts");
-
-            if (postsJson == null) postsJson = new JsonArray();
-
+            JsonArray arr = root.getAsJsonArray();
             Gson gson = new Gson();
-            for (JsonElement el : postsJson) {
+
+            for (JsonElement el : arr) {
                 Post p = gson.fromJson(el, Post.class);
                 varFiltersCg.add(p);
             }
@@ -95,9 +92,11 @@ class Main {
 
     public static void main(String[] args) {
         List<Post> posts = fetchPosts();
+        System.out.println("Fetched posts: " + posts.size());
         List<Map<String, Integer>> formatted = formatPosts(posts);
         System.out.println(formatted);
     }
 }
+
 
 ```
